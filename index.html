@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>腾讯地图-简单地图示例</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<style type="text/css">
+html,body{
+    width:100%;
+    height:100%;
+}
+*{
+    margin:0px;
+    padding:0px;
+}
+body, button, input, select, textarea {
+    font: 12px/16px Verdana, Helvetica, Arial, sans-serif;
+}
+p{
+    width:603px;
+    padding-top:3px;
+    overflow:hidden;
+}
+.btn{
+    width:142px;
+}
+#iCenter{
+    margin-left:100px;
+    width: 1000px;
+    height: 400px;
+}
+</style>
+
+</head>
+<body >
+    <div id="iCenter"></div>
+</body>
+<script charset="utf-8" src="http://map.qq.com/api/js?v=2.exp&libraries=geometry"></script>
+<script src="bower_components/jquery/dist/jquery.min.js"></script>
+<script src="map_qq.js"></script>
+<script>
+    var map = new $.MapQQ({
+        mapAreaId :'iCenter',
+        addBtnId : 'add',
+        ulAreaId : 'list',
+        center: {
+            lng: 121.38064,
+            lat: 31.231572
+        },
+        model:'edit'
+    })
+// var center = new qq.maps.LatLng(39.916527,116.397128);
+//     var map = new qq.maps.Map(document.getElementById('iCenter'),{
+//         center: center,
+//         zoom: 13
+//     });
+//      var path1=[
+//         new qq.maps.LatLng(39.930131,116.395500),
+//         new qq.maps.LatLng(39.911437,116.377476),
+//         new qq.maps.LatLng(39.911305,116.417301)
+//     ];
+//      var path2=[
+//         new qq.maps.LatLng(39.926516,116.389366),
+//         new qq.maps.LatLng(39.924870,116.403270),
+//         new qq.maps.LatLng(39.918090,116.406274),
+//         new qq.maps.LatLng(39.909466,116.397863),
+//         new qq.maps.LatLng(39.913021,116.387134)
+//     ];
+//     var polygon = new qq.maps.Polygon({
+//         path:path1,
+//         strokeColor: '#000000',
+//         strokeWeight: 5,
+//         fillColor: '#111111',
+//         map: map
+//     });
+//     console.log(polygon)
+
+</script>
+</html>
