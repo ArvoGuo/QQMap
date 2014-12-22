@@ -95,6 +95,7 @@
     self.opts = $.extend({}, opts);
     self.opts.minZoom = self.opts.minZoom || 11;
     self.opts.maxZoom = self.opts.maxZoom || 17;
+    self.zIndex = 19;
     self.Color = new Color();
     self.polygonList = opts.polygonList || [];
     self.mapInit();
@@ -107,16 +108,47 @@
       minZoom: self.opts.minZoom,
       maxZoom: self.opts.maxZoom
     });
+    qq.maps.event.addListener(self.mapObj, 'mousemove', function(e) {
+      self.mousePos = e.latLng;
+    });
   };
+
+  fn.repaintMap = function(data){
+    var self = this;
+    var polygonLngLats = data.areas;
+    //reinitMap
+
+    self.polygonList = [];
+    polygonLngLats.forEach(function(obj){
+      var price = obj.price;
+      var path = obj.path.map(function(index){
+        return self.pathEle({
+          lng: index.lng,
+          lat: index.lat
+        });
+      });
+      self.polygonList.push(self.newPolgon({
+        path: path,
+        price: price
+      }));
+    });
+    //repainUlArea
+  };
+
+  fn.pathEle = function(obj){
+    return new qq.maps.LatLng(obj.lat,obj.lng);
+  };
+
   /** Polygon Factory */
   fn.newPolgon = function(opt) {
     var self = this;
     var color = self.Color.getColor();
     var mapCenter = self.mapObj.getCenter();
-    var newPath = [],len = 1000 * Math.sin(2*Math.PI / 45);
-    var points = [45,135,225,315];
-    points.forEach(function(value){
-      newPath.push(qq.maps.geometry.spherical.computeOffset(mapCenter,len,value));
+    var newPath = [],
+      len = 1000 * Math.sin(2 * Math.PI / 45);
+    var points = [45, 135, 225, 315];
+    points.forEach(function(value) {
+      newPath.push(qq.maps.geometry.spherical.computeOffset(mapCenter, len, value));
     });
     var newPolygon = new qq.maps.Polygon({
       path: opt && opt.path || newPath,
@@ -129,8 +161,68 @@
       price: opt && opt.price || 0,
       editable: false
     };
+    self.bindAction(newPolygon);
     return newPolygon;
   };
+
+  fn.bindAction = function(polygon) {
+    var self = this;
+    var interval;
+    qq.maps.event.addListener(polygon, 'click', function() {
+      if (this.extData.editable === false) {
+        this.setOptions({
+          editable: true
+        });
+        this.extData.editable = true;
+      } else if (this.extData.editable === true) {
+        this.setOptions({
+          editable: false
+        });
+        this.extData.editable = false;
+      }
+      console.log(1)
+    });
+    qq.maps.event.addListener(polygon, 'mousedown', function() {
+      var _this = this;
+      //cancel info
+      //cansel dragmap
+      self.mapObj.setOptions({
+        draggable: false,
+        scrollwheel: false
+      });
+      //change index
+      _this.setZIndex(++self.zIndex);
+      var oldPath = _this.getPath().getArray().map(function(item){
+        return {
+          lat: item.lat,
+          lng: item.lng
+        };
+      });
+      var mouselat = self.mousePos.lat;
+      var mouselng = self.mousePos.lng;
+      var newPath;
+      interval = setInterval(function(){
+        var disLat = self.mousePos.lat - mouselat;
+        var disLng = self.mousePos.lng - mouselng;
+        newPath = oldPath.map(function(item){
+          return new qq.maps.LatLng(item.lat + disLat, item.lng + disLng);
+        });
+        _this.setPath(newPath);
+      },67);
+      console.log(2)
+    });
+    qq.maps.event.addListener(polygon, 'mouseup', function(e) {
+      console.log(e)
+      clearInterval(interval);
+      self.mapObj.setOptions({
+        draggable: true,
+        scrollwheel: true
+      });
+      console.log(3)
+    });
+
+  };
+
 
   $.MapQQ = function(options) {
     return new MapQQ(options);
