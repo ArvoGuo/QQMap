@@ -95,11 +95,16 @@
     self.opts = $.extend({}, opts);
     self.opts.minZoom = self.opts.minZoom || 11;
     self.opts.maxZoom = self.opts.maxZoom || 17;
+    self.liDemoId = opts.liDemoId;
+    self.addBtnId = opts.addBtnId;
+    self.ulAreaId = opts.ulAreaId;
     self.zIndex = 19;
     self.Color = new Color();
     self.polygonList = opts.polygonList || [];
     self.mapInit();
+    self.showAreaInit();
   };
+
   fn.mapInit = function() {
     var self = this;
     self.mapObj = new qq.maps.Map(document.getElementById(self.opts.mapAreaId), {
@@ -110,6 +115,43 @@
     });
     qq.maps.event.addListener(self.mapObj, 'mousemove', function(e) {
       self.mousePos = e.latLng;
+    });
+  };
+
+  fn.showAreaInit = function(){
+    var self = this;
+    self.addBtn = $('#' + self.addBtnId);
+    self.ulArea = $('#' + self.ulAreaId);
+    self.itemDemo = $('#' + self.liDemoId).html();
+    self.addBtn.on('click', function() {
+      var newPolyon = self.newPolgon();
+      self.reflashUlArea();
+    });
+  };
+
+  fn.reflashUlArea = function(){
+    var self = this;
+    self.ulArea.html('');
+    self.polygonList.forEach(function(value, index) {
+      var newItem = $(self.itemDemo);
+      newItem
+        .find('.color').css({
+          'background-color': value.fillColor,
+          'opacity': '.3',
+          'color': '#FFF'
+        }).end()
+        .find('.price').val(value.extData.price).end()
+        .find('.delete').on('click', function() {
+          //self.delOne(value);
+          //value.getExtData().li.remove();
+        }).end()
+        .appendTo(self.ulArea);
+      newItem.on('click', function(e) {
+        e.stopPropagation();
+        value.setZIndex(++self.zIndex);
+        //self.checkEditable(value);
+      });
+      value.extData.li = newItem;
     });
   };
 
@@ -127,16 +169,34 @@
           lat: index.lat
         });
       });
-      self.polygonList.push(self.newPolgon({
+      self.newPolgon({
         path: path,
         price: price
-      }));
+      });
     });
-    //repainUlArea
+    self.reflashUlArea();
+  };
+
+  fn.reInitMap = function(){
+    var self = this;
+
   };
 
   fn.pathEle = function(obj){
     return new qq.maps.LatLng(obj.lat,obj.lng);
+  };
+
+  fn.delOne = function(polygon){
+    var self = this;
+    var index = self.polygonList.indexOf(polygon);
+    self.polygonList.splice(index, 1);
+    polygon.extData.editable = false;
+    polygon.setOptions({
+          map: null,
+          visible: false,
+          editable: false
+        })
+    return true;
   };
 
   /** Polygon Factory */
@@ -162,13 +222,19 @@
       editable: false
     };
     self.bindAction(newPolygon);
+    self.polygonList.push(newPolygon);
     return newPolygon;
   };
 
   fn.bindAction = function(polygon) {
     var self = this;
     var interval;
+    var startTime = 0;
+    var endTime = 0;
     qq.maps.event.addListener(polygon, 'click', function() {
+      if( Math.abs(startTime - endTime) > 300){
+        return;
+      }
       if (this.extData.editable === false) {
         this.setOptions({
           editable: true
@@ -180,15 +246,19 @@
         });
         this.extData.editable = false;
       }
-      console.log(1)
     });
     qq.maps.event.addListener(polygon, 'mousedown', function() {
       var _this = this;
+      if (_this.extData.editable === true){
+        return;
+      }
+      startTime = (new Date()).getTime();
       //cancel info
       //cansel dragmap
       self.mapObj.setOptions({
         draggable: false,
-        scrollwheel: false
+        scrollwheel: false,
+        disableDoubleClickZoom: false
       });
       //change index
       _this.setZIndex(++self.zIndex);
@@ -209,16 +279,19 @@
         });
         _this.setPath(newPath);
       },67);
-      console.log(2)
     });
     qq.maps.event.addListener(polygon, 'mouseup', function(e) {
-      console.log(e)
+      var _this = this;
+      if (_this.extData.editable === true){
+        return;
+      }
+      endTime = (new Date()).getTime();
       clearInterval(interval);
       self.mapObj.setOptions({
         draggable: true,
-        scrollwheel: true
+        scrollwheel: true,
+        disableDoubleClickZoom: true
       });
-      console.log(3)
     });
 
   };
