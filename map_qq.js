@@ -98,10 +98,13 @@
     self.liDemoId = opts.liDemoId;
     self.addBtnId = opts.addBtnId;
     self.ulAreaId = opts.ulAreaId;
+    self.model = opts.model || 'edit';
+    self.infoWindowZIndex = 3000;
     self.zIndex = 19;
     self.Color = new Color();
     self.polygonList = opts.polygonList || [];
     self.mapInit();
+    self.infoWindowInit();
     self.showAreaInit();
   };
 
@@ -111,14 +114,20 @@
       center: new qq.maps.LatLng(self.opts.center.lat, self.opts.center.lng),
       zoom: 16,
       minZoom: self.opts.minZoom,
-      maxZoom: self.opts.maxZoom
+      maxZoom: self.opts.maxZoom,
+      mapTypeControl: false,
+      zoomControlOptions: {
+        style: qq.maps.ZoomControlStyle.SMALL
+      }
     });
-    qq.maps.event.addListener(self.mapObj, 'mousemove', function(e) {
-      self.mousePos = e.latLng;
-    });
+    if (self.model === 'edit') {
+      qq.maps.event.addListener(self.mapObj, 'mousemove', function(e) {
+        self.mousePos = e.latLng;
+      });
+    }
   };
 
-  fn.showAreaInit = function(){
+  fn.showAreaInit = function() {
     var self = this;
     self.addBtn = $('#' + self.addBtnId);
     self.ulArea = $('#' + self.ulAreaId);
@@ -129,7 +138,7 @@
     });
   };
 
-  fn.reflashUlArea = function(){
+  fn.reflashUlArea = function() {
     var self = this;
     self.ulArea.html('');
     self.polygonList.forEach(function(value, index) {
@@ -142,28 +151,30 @@
         }).end()
         .find('.price').val(value.extData.price).end()
         .find('.delete').on('click', function() {
-          //self.delOne(value);
-          //value.getExtData().li.remove();
+          value.extData.li.remove();
+          self.delOne(value);
+          value = null;
         }).end()
         .appendTo(self.ulArea);
       newItem.on('click', function(e) {
         e.stopPropagation();
         value.setZIndex(++self.zIndex);
-        //self.checkEditable(value);
+        //self.openEditor(value);
+        self.infoWindowOpen(value);
       });
       value.extData.li = newItem;
     });
   };
 
-  fn.repaintMap = function(data){
+  fn.repaintMap = function(data) {
     var self = this;
     var polygonLngLats = data.areas;
     //reinitMap
 
     self.polygonList = [];
-    polygonLngLats.forEach(function(obj){
+    polygonLngLats.forEach(function(obj) {
       var price = obj.price;
-      var path = obj.path.map(function(index){
+      var path = obj.path.map(function(index) {
         return self.pathEle({
           lng: index.lng,
           lat: index.lat
@@ -177,25 +188,52 @@
     self.reflashUlArea();
   };
 
-  fn.reInitMap = function(){
+  fn.reInitMap = function() {
     var self = this;
 
   };
 
-  fn.pathEle = function(obj){
-    return new qq.maps.LatLng(obj.lat,obj.lng);
+  fn.pathEle = function(obj) {
+    return new qq.maps.LatLng(obj.lat, obj.lng);
   };
 
-  fn.delOne = function(polygon){
+  fn.delOne = function(polygon) {
     var self = this;
+    self.infoWindow.close();
     var index = self.polygonList.indexOf(polygon);
     self.polygonList.splice(index, 1);
     polygon.extData.editable = false;
     polygon.setOptions({
-          map: null,
-          visible: false,
+      map: null,
+      visible: false,
+      editable: false
+    });
+    return true;
+  };
+
+  fn.openEditor = function(polygon) {
+    var self = this;
+    self.closeOtherEditor();
+    polygon.extData.editable = true;
+    polygon.setOptions({
+      editable: true
+    });
+    return polygon;
+  };
+
+  fn.closeOtherEditor = function(polygon) {
+    var self = this;
+    self.polygonList.forEach(function(value) {
+      if (polygon && value === polygon) {
+        return;
+      }
+      if (value.extData.editable) {
+        value.setOptions({
           editable: false
-        })
+        });
+        value.extData.editable = false;
+      }
+    });
     return true;
   };
 
@@ -221,20 +259,25 @@
       price: opt && opt.price || 0,
       editable: false
     };
-    self.bindAction(newPolygon);
+    if (self.model === 'edit') {
+      self.bindAction(newPolygon);
+    }
     self.polygonList.push(newPolygon);
     return newPolygon;
   };
 
+  /*覆盖物绑定事件部分*/
   fn.bindAction = function(polygon) {
     var self = this;
     var interval;
     var startTime = 0;
     var endTime = 0;
     qq.maps.event.addListener(polygon, 'click', function() {
-      if( Math.abs(startTime - endTime) > 300){
+      if (Math.abs(startTime - endTime) > 300) {
         return;
       }
+      this.setZIndex(++self.zIndex);
+      self.closeOtherEditor(this);
       if (this.extData.editable === false) {
         this.setOptions({
           editable: true
@@ -249,7 +292,7 @@
     });
     qq.maps.event.addListener(polygon, 'mousedown', function() {
       var _this = this;
-      if (_this.extData.editable === true){
+      if (_this.extData.editable === true) {
         return;
       }
       startTime = (new Date()).getTime();
@@ -262,7 +305,7 @@
       });
       //change index
       _this.setZIndex(++self.zIndex);
-      var oldPath = _this.getPath().getArray().map(function(item){
+      var oldPath = _this.getPath().getArray().map(function(item) {
         return {
           lat: item.lat,
           lng: item.lng
@@ -271,18 +314,18 @@
       var mouselat = self.mousePos.lat;
       var mouselng = self.mousePos.lng;
       var newPath;
-      interval = setInterval(function(){
+      interval = setInterval(function() {
         var disLat = self.mousePos.lat - mouselat;
         var disLng = self.mousePos.lng - mouselng;
-        newPath = oldPath.map(function(item){
+        newPath = oldPath.map(function(item) {
           return new qq.maps.LatLng(item.lat + disLat, item.lng + disLng);
         });
         _this.setPath(newPath);
-      },67);
+      }, 67);
     });
     qq.maps.event.addListener(polygon, 'mouseup', function(e) {
       var _this = this;
-      if (_this.extData.editable === true){
+      if (_this.extData.editable === true) {
         return;
       }
       endTime = (new Date()).getTime();
@@ -293,7 +336,67 @@
         disableDoubleClickZoom: true
       });
     });
+  };
 
+  /*提示框部分*/
+  fn.infoWindowInit = function() {
+    var self = this;
+    self.infoWindow = new qq.maps.InfoWindow({
+      content: self.infoWindowContent(''),
+      position: self.mapObj.getCenter(),
+      map: self.mapObj,
+      zIndex: self.infoWindowZIndex
+    });
+  };
+
+  fn.infoWindowOpen = function(polygon){
+    var self = this;
+    self.infoWindow.close();
+    self.infoWindow.setPosition(polygon.getBounds().getCenter());
+    self.infoWindow.setContent(self.infoWindowContent(polygon.extData.li.find('.price').val()));
+    self.infoWindow.open();
+    clearTimeout(self.t);
+    self.t = setTimeout(function(){
+      self.infoWindow.close();
+    },10000)
+  };
+
+  fn.infoWindowContent = function(content) {
+    return '<div style="padding-bottom:10px;"><div class="tooltip top" style="position:relative!important;" role="tooltip"><div class="tooltip-arrow"></div><div class="tooltip-inner"> 起送价：' + content + '元</div></div></div>';
+  };
+
+  /*输出数据部分*/
+  fn.getOneInfo = function(polygon) {
+    var self = this;
+    var path = polygon.getPath().getArray();
+    path = path.map(function(point) {
+      return {
+        lat: point.lat,
+        lng: point.lng
+      };
+    });
+    return {
+      price: polygon.extData.li.find('.price').val(),
+      path: path
+    };
+  };
+
+  fn.getAllInfo = function() {
+    var self = this;
+    return self.polygonList.map(function(polygon) {
+      return self.getOneInfo(polygon);
+    });
+  };
+
+  fn.outPutData = function() {
+    var self = this;
+    return {
+      center: {
+        lat: self.mapObj.getCenter().getLat(),
+        lng: self.mapObj.getCenter().getLng()
+      },
+      areas: self.getAllInfo()
+    };
   };
 
 
