@@ -169,8 +169,7 @@
   fn.repaintMap = function(data) {
     var self = this;
     var polygonLngLats = data.areas;
-    //reinitMap
-
+    self.reInitMap();
     self.polygonList = [];
     polygonLngLats.forEach(function(obj) {
       var price = obj.price;
@@ -190,7 +189,11 @@
 
   fn.reInitMap = function() {
     var self = this;
-
+    self.polygonList.forEach(function(obj) {
+      obj.setMap(null);
+    });
+    self.Color.reset();
+    return true;
   };
 
   fn.pathEle = function(obj) {
@@ -349,16 +352,16 @@
     });
   };
 
-  fn.infoWindowOpen = function(polygon){
+  fn.infoWindowOpen = function(polygon) {
     var self = this;
     self.infoWindow.close();
     self.infoWindow.setPosition(polygon.getBounds().getCenter());
     self.infoWindow.setContent(self.infoWindowContent(polygon.extData.li.find('.price').val()));
     self.infoWindow.open();
     clearTimeout(self.t);
-    self.t = setTimeout(function(){
+    self.t = setTimeout(function() {
       self.infoWindow.close();
-    },10000)
+    }, 10000)
   };
 
   fn.infoWindowContent = function(content) {
@@ -403,5 +406,4 @@
   $.MapQQ = function(options) {
     return new MapQQ(options);
   };
-
 })($);
