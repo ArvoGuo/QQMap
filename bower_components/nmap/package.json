@@ -1,0 +1,17 @@
+{
+  "name": "nmap",
+  "version": "1.0.15",
+  "description": "",
+  "main": "js/src",
+  "dependencies": {
+    "event-emitter": "^0.3.4",
+    "lodash": "^3.10.1",
+    "webpack": "^1.12.4"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": ""
+  },
+  "author": "",
+  "license": "ISC"
+}

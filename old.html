@@ -1,0 +1,227 @@
+<!DOCTYPE HTML>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <title>多边形绘制</title>
+    </head>
+    <style>
+    .tooltip {
+    position: relative;
+    z-index: 1000;
+    display: block;
+    visibility: visible;
+    font-size: 14px;
+    line-height: 1.4;
+    opacity: 0.9; }
+    /* line 10, /Users/Arvo/github/melody/client/styles/component/tooltip */
+    .tooltip:in {
+    opacity: 0.9; }
+    /* line 12, /Users/Arvo/github/melody/client/styles/component/tooltip */
+    .tooltip.top {
+    margin-top: -3px;
+    padding: 5px 0; }
+    /* line 15, /Users/Arvo/github/melody/client/styles/component/tooltip */
+    .tooltip.right {
+    margin-left: 3px;
+    padding: 0 5px; }
+    /* line 18, /Users/Arvo/github/melody/client/styles/component/tooltip */
+    .tooltip.bottom {
+    margin-top: 3px;
+    padding: 5px 0; }
+    /* line 21, /Users/Arvo/github/melody/client/styles/component/tooltip */
+    .tooltip.left {
+    margin-left: -3px;
+    padding: 0 5px; }
+    /* line 25, /Users/Arvo/github/melody/client/styles/component/tooltip */
+    .tooltip-inner {
+    max-width: 200px;
+    padding: 3px 8px;
+    color: #fff;
+    text-align: center;
+    text-decoration: none;
+    background-color: rgba(0, 0, 0, 0.8);
+    border-radius: 2px; }
+    /* line 34, /Users/Arvo/github/melody/client/styles/component/tooltip */
+    .tooltip-arrow {
+    position: absolute;
+    width: 0;
+    height: 0;
+    border-color: transparent;
+    border-style: solid; }
+    /* line 42, /Users/Arvo/github/melody/client/styles/component/tooltip */
+    .tooltip.top .tooltip-arrow {
+    bottom: 0;
+    left: 50%;
+    margin-left: -5px;
+    border-width: 5px 5px 0;
+    border-top-color: rgba(0, 0, 0, 0.8); }
+    /* line 48, /Users/Arvo/github/melody/client/styles/component/tooltip */
+    .tooltip.top-left .tooltip-arrow {
+    bottom: 0;
+    left: 5px;
+    border-width: 5px 5px 0;
+    border-top-color: rgba(0, 0, 0, 0.8); }
+    /* line 53, /Users/Arvo/github/melody/client/styles/component/tooltip */
+    .tooltip.top-right .tooltip-arrow {
+    bottom: 0;
+    right: 5px;
+    border-width: 5px 5px 0;
+    border-top-color: rgba(0, 0, 0, 0.8); }
+    /* line 58, /Users/Arvo/github/melody/client/styles/component/tooltip */
+    .tooltip.right .tooltip-arrow {
+    top: 50%;
+    left: 0;
+    margin-top: -5px;
+    border-width: 5px 5px 5px 0;
+    border-right-color: rgba(0, 0, 0, 0.8); }
+    /* line 64, /Users/Arvo/github/melody/client/styles/component/tooltip */
+    .tooltip.left .tooltip-arrow {
+    top: 50%;
+    right: 0;
+    margin-top: -5px;
+    border-width: 5px 0 5px 5px;
+    border-left-color: rgba(0, 0, 0, 0.8); }
+    /* line 70, /Users/Arvo/github/melody/client/styles/component/tooltip */
+    .tooltip.bottom .tooltip-arrow {
+    top: 0;
+    left: 50%;
+    margin-left: -5px;
+    border-width: 0 5px 5px;
+    border-bottom-color: rgba(0, 0, 0, 0.8); }
+    /* line 76, /Users/Arvo/github/melody/client/styles/component/tooltip */
+    .tooltip.bottom-left .tooltip-arrow {
+    top: 0;
+    left: 5px;
+    border-width: 0 5px 5px;
+    border-bottom-color: rgba(0, 0, 0, 0.8); }
+    /* line 81, /Users/Arvo/github/melody/client/styles/component/tooltip */
+    .tooltip.bottom-right .tooltip-arrow {
+    top: 0;
+    right: 5px;
+    border-width: 0 5px 5px;
+    border-bottom-color: rgba(0, 0, 0, 0.8); }
+    body{
+    margin:0;
+    padding:0;
+    }
+    #iCenter{
+    width: 1000px;
+    height: 500px;
+    }
+    #add{
+    position: fixed;
+    right: 100px;
+    top: 50px;
+    }
+    #submit{
+    position: fixed;
+    right: 100px;
+    top: 20px;
+    z-index: 10;
+    }
+    #list{
+    position: fixed;
+    right: 100px;
+    top:70px;
+    display: block;
+    overflow: hidden;
+    margin:0;
+    padding:0;
+    }
+    li{
+    background-color: #ccc;
+    cursor: pointer;
+    padding:10px;
+    margin:2px;
+    }
+    #latlng {
+        width: 400px;
+        height: 200px;
+    }
+    </style>
+    <body >
+        <div>
+            <div id="iCenter"></div>
+        </div>
+        <button id="add">点击生成一个矩形</button>
+        <button id="submit" onclick="console.log(map.outPutData())"> 确定</button>
+        <ul id="list" style="display:none">
+        </ul>
+        <div id="li-demo" style="display:none">
+            <li>
+                <div class="color" style="width:50px;height:50px;display:inline-block;"></div>
+                <div class="information" style="display:inline-block;">
+                    <h4>起送价：</h4>
+                    <input class="price" type="text"/><span>&nbsp;元</span>
+                    <span class="delete">&times;</span>
+                </div>
+            </li>
+        </div>
+        <div id="li-demo" style="display:none">
+            <li><div><span class="zone color"></span>配送区域 </div><span class="pull-right"><input class="price" readonly></input>元</span></li>
+        </div>
+        <div>
+            <textarea name="" id="latlng" ></textarea>
+            <button id="build">生成区域</button>
+        </div>
+
+    </body>
+    <!--
+    <script charset="utf-8" src="http://map.qq.com/api/js?v=2.exp&libraries=geometry"></script>
+ -->
+    <script>
+    window.qq = window.qq || {};
+qq.maps = qq.maps || {};
+window.soso || (window.soso = qq);
+soso.maps || (soso.maps = qq.maps);
+(function () {
+    function getScript(src) {
+        document.write('<' + 'script src="' + src + '"' +' type="text/javascript"><' + '/script>');
+    }
+    qq.maps.__load = function (apiLoad) {
+        delete qq.maps.__load;
+        apiLoad([["2.3.4","",0],["http://open.map.qq.com/","apifiles/2/3/4/mods/","http://open.map.qq.com/apifiles/2/3/4/theme/",true],[1,18,34.519469,104.461761,4],[1420445926485,"http://ping.map.qq.com/call","http://ping.map.qq.com/call"],["http://apic.map.qq.com/","http://apikey.map.qq.com/mkey/index.php/mkey/check","http://sv.map.qq.com/xf","http://sv.map.qq.com/rarp"],[[null,["http://p0.map.gtimg.com/maptilesv3","http://p1.map.gtimg.com/maptilesv3","http://p2.map.gtimg.com/maptilesv3","http://p3.map.gtimg.com/maptilesv3"],"png",[256,256],1,19,"",true,false],[null,["http://p0.map.gtimg.com/hwaptiles","http://p1.map.gtimg.com/hwaptiles","http://p2.map.gtimg.com/hwaptiles","http://p3.map.gtimg.com/hwaptiles"],"png",[128,128],1,19,"",false,false],[null,["http://p0.map.gtimg.com/sateTiles","http://p1.map.gtimg.com/sateTiles","http://p2.map.gtimg.com/sateTiles","http://p3.map.gtimg.com/sateTiles"],"jpg",[256,256],1,19,"",false,false],[null,["http://p0.map.gtimg.com/sateTranTilesv3","http://p1.map.gtimg.com/sateTranTilesv3","http://p2.map.gtimg.com/sateTranTilesv3","http://p3.map.gtimg.com/sateTranTilesv3"],"png",[256,256],1,19,"",false,false],[null,["http://sv0.map.qq.com/road/","http://sv1.map.qq.com/road/","http://sv2.map.qq.com/road/","http://sv3.map.qq.com/road/"],"png",[256,256],1,19,"",false,false],[null,["http://rtt2.map.qq.com/live/"],"png",[256,256],1,19,"",false,false],null,null,null],["http://s.map.qq.com/TPano/v1.1.1/TPano.js","http://map.qq.com/",""]],loadScriptTime);
+    };
+    var loadScriptTime = (new Date).getTime();
+    getScript("http://open.map.qq.com/c/=/apifiles/2/3/4/main.js,apifiles/2/3/4/mods/geometry.js");
+})();</script>
+    <script src="bower_components/jquery/dist/jquery.min.js"></script>
+    <script src="map_qq.js"></script>
+    <script>
+    var map = new $.MapQQ({
+        mapAreaId: 'iCenter',
+          addBtnId: 'add',
+          ulAreaId: 'list',
+          liDemoId: 'li-demo',
+          minZoom: 1,
+          maxZoom: 17,
+        center: {
+        lng: 121.38064,
+        lat: 31.231572
+        },
+        model:'observe'
+    })
+
+        data = {"center":{"lat":"31.259928358250843","lng":"121.44005798879533"},
+        "areas":[
+            // {"id":"205a95a4-8049-11e4-9988-c81f66c0e53b",
+            //  "price":10,
+            //  "path":[
+
+            //    ]
+            // }
+        ]}
+    // data = {"center":{"lat":"31.231572","lng":"121.38064"},"areas":[{"id":"205a95a4-8049-11e4-9988-c81f66c0e53b","price":10,"path":[{"lng":121.378938,"lat":31.231766},{"lng":121.379474,"lat":31.231766},{"lng":121.379474,"lat":31.231307},{"lng":121.378938,"lat":31.231307}]},{"id":"4f0035e2-804b-11e4-9f98-90b11c572918","price":2,"path":[{"lng":121.379818,"lat":31.233055},{"lng":121.380354,"lat":31.233055},{"lng":121.381191,"lat":31.231849},{"lng":121.378128,"lat":31.232275}]},{"id":"4f003be6-804b-11e4-9f98-90b11c572918","price":220,"path":[{"lng":121.377774,"lat":31.231252},{"lng":121.378294,"lat":31.231752},{"lng":121.379217,"lat":31.231849},{"lng":121.37993,"lat":31.230766},{"lng":121.377774,"lat":31.230794}]}]}
+    // map.repaintMap(data)
+
+    $('#build').on('click', function() {
+        data.areas.push({
+            id: null,
+            price: 1,
+            path: JSON.parse($('#latlng').val()).polygon
+        }) ;
+        map.repaintMap(data);
+    })
+
+    </script>
+</html>

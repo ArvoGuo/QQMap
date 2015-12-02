@@ -1,0 +1,28 @@
+{
+  "name": "nmap",
+  "description": "",
+  "main": "build/nmap.dist.js",
+  "authors": [
+    "Arvo <ArvoGuo@gmail.com>"
+  ],
+  "license": "ISC",
+  "moduleType": [],
+  "homepage": "https://github.com/ArvoGuo/nmap",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "_release": "32c5bd096f",
+  "_resolution": {
+    "type": "branch",
+    "branch": "master",
+    "commit": "32c5bd096ffbfbb5cd74a46ffbca26bf83720b34"
+  },
+  "_source": "git://github.com/ArvoGuo/nmap.git",
+  "_target": "*",
+  "_originalSource": "nmap",
+  "_direct": true
+}
