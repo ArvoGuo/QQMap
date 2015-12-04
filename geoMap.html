@@ -107,7 +107,7 @@
     <div class="row">
       <p class="title">输入数组生成区域</p>
       <textarea name="" class="make_polygon_area" placeholder="输入经纬度">
-       {"type":"FeatureCollection","features":[{"id":"","type":"Feature","geometry":{"type":"Polygon","coordinates":[[[121.39257737624138,31.239775764059207],[121.392634,31.239763],[121.39333407908035,31.239676018343637],[121.39476620316537,31.239487241145653],[121.39646530040265,31.239148385269417],[121.39673786474786,31.239092489913972],[121.396247,31.233612],[121.396373,31.231892],[121.396191,31.229231],[121.39782993377516,31.219748005865767],[121.397547,31.219651],[121.3978445673493,31.21891766852102],[121.392741,31.218584],[121.388964,31.218763],[121.385381,31.219166],[121.376583,31.220286],[121.376841,31.225387],[121.378386,31.228598],[121.379587,31.231112],[121.381218,31.233442],[121.38551,31.242111],[121.387581,31.240873],[121.38838900427166,31.240701032034075],[121.39026,31.240296],[121.392568,31.239777]]]}}]}
+       [{"type":"FeatureCollection","features":[{"id":"","type":"Feature","geometry":{"type":"Polygon","coordinates":[[[121.39257737624138,31.239775764059207],[121.392634,31.239763],[121.39333407908035,31.239676018343637],[121.39476620316537,31.239487241145653],[121.39646530040265,31.239148385269417],[121.39673786474786,31.239092489913972],[121.396247,31.233612],[121.396373,31.231892],[121.396191,31.229231],[121.39782993377516,31.219748005865767],[121.397547,31.219651],[121.3978445673493,31.21891766852102],[121.392741,31.218584],[121.388964,31.218763],[121.385381,31.219166],[121.376583,31.220286],[121.376841,31.225387],[121.378386,31.228598],[121.379587,31.231112],[121.381218,31.233442],[121.38551,31.242111],[121.387581,31.240873],[121.38838900427166,31.240701032034075],[121.39026,31.240296],[121.392568,31.239777]]]}}]}]
       </textarea>
       <button class="btn btn-primary make_polygon_area_confirm" >生成区域</button>
     </div>
@@ -143,21 +143,26 @@
 
     make_polygon_area_confirm.on('click', function() {
       var data = JSON.parse(make_polygon_area.val());
-      data.features.forEach(function(item) {
+      if (!isArray(data)) {
+          data = [data];
+      }
+      data.forEach(function(featureCollection) {
         var _color = color.toHex(color.produceColor(), 0.5);
-        item.geometry.coordinates.forEach(function(_item) {
-          var polygon = NMap.create('Polygon',  {
-            path: (function(path) {
-                    var _path = [];
-                    path.forEach(function(_p) {
-                      _path.push(NMap.create('Point', _p[1], _p[0]).target);
-                    });
-                    return _path;
-                  })(_item),
-            fillColor: _color,
-            strokeColor: _color,
+        featureCollection.features.forEach(function(feature) {
+          feature.geometry.coordinates.forEach(function(_item) {
+            var polygon = NMap.create('Polygon',  {
+              path: (function(path) {
+                      var _path = [];
+                      path.forEach(function(_p) {
+                        _path.push(NMap.create('Point', _p[1], _p[0]).target);
+                      });
+                      return _path;
+                    })(_item),
+              fillColor: _color,
+              strokeColor: _color,
+            });
+            handleNewPolygon(polygon);
           });
-          handleNewPolygon(polygon);
         });
       });
       map.fitBounds();
@@ -179,9 +184,8 @@
     output_all_confirm.on('click', function() {
       var _p_infos = [];
       polygonList.forEach(function(item) {
-        _p_infos.push(transLatLngToArray(item.getPoints()));
+        _p_infos.push(formatInfo([transLatLngToArray(item.getPoints())]));
       });
-      _p_infos = formatInfo(_p_infos);
       output_area.val(JSON.stringify(_p_infos));
     });
 
