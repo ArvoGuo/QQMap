@@ -181,6 +181,7 @@
       polygonList.forEach(function(item) {
         _p_infos.push(transLatLngToArray(item.getPoints()));
       });
+      _p_infos = formatInfo(_p_infos);
       output_area.val(JSON.stringify(_p_infos));
     });
 
@@ -200,7 +201,8 @@
 
     function handleNewPolygon(polygon) {
       qq.maps.event.addListener(polygon.target, 'click', function () {
-        var _p_info = transLatLngToArray(polygon.getPoints());
+        var _p_info = [transLatLngToArray(polygon.getPoints())];
+        _p_info = formatInfo(_p_info);
         output_area.val(JSON.stringify(_p_info));
       });
       polygonList.push(polygon);
@@ -220,6 +222,21 @@
       _p_info.push([item.lng, item.lat]);
     });
     return _p_info;
+  }
+
+  function formatInfo(info) {
+    return {
+      type: 'FeatureCollection',
+      features: [{
+        id: '',
+        type: 'Feature',
+        geometry: {
+          type: 'Polygon',
+          coordinates: info
+        }
+      }]
+    }
+    return info;
   }
 
 </script>
