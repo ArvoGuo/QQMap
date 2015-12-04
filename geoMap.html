@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>geoMap</title>
+</head>
+<style>
+  body, html {
+    width: 100%;
+    height: 100%;
+  }
+  p {
+    margin: 0;
+  }
+  textarea {
+    resize: none;
+  }
+  .slide, .slide div {
+    padding: 3px;
+    border: 1px solid #000;
+  }
+  .row {
+    margin: 5px;
+    margin-top: 15px;
+    padding: 3px;
+    border-top: 5px solid gray!important;
+  }
+  .row .title {
+    margin-bottom: 5px;
+  }
+  #map {
+    float: left;
+    width: 70%;
+    height: 95%;
+  }
+  .slide {
+    position: relative;
+    float: left;
+    margin-left: 2%;
+    width: 25%;
+    height: 95%;
+  }
+  .make_polygon_area {
+    box-sizing: border-box;
+    width: 100%;
+    height: 150px;
+  }
+  .output_area {
+    box-sizing: border-box;
+    width: 100%;
+    height: 150px;
+  }
+
+  .loading {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    text-align: center;
+    line-height: 50;
+    background-color: gray;
+  }
+
+  .btn.btn-primary {
+    color: #fff;
+    border-color: #427fed;
+    background-color: #427fed;
+    transition: all .1s linear;
+    padding: 4px 16px;
+    border-radius: 2px;
+    border: 1px solid transparent;
+    font-size: 14px;
+    text-decoration: none;
+    line-height: 1.2;
+    cursor: pointer;
+    vertical-align: middle;
+    display: inline-block;
+    text-align: center;
+  }
+  .btn.btn-primary:hover {
+    opacity: 0.9;
+  }
+  .btn-group button {
+    margin-bottom: 5px;
+  }
+
+
+</style>
+<body>
+  <div id="map"></div>
+  <div class="slide">
+    <div class="loading">
+      正在加载地图，请等待...
+    </div>
+    <div class="row">
+      <label for="open_edit"><input type="checkbox" id="open_edit">开启编辑模式(已绘制的区域)</label>
+    </div>
+    <div class="row">
+      <p class="title">多功能区</p>
+      <div class="btn-group">
+        <button class="btn btn-primary output_all_confirm" >输出所有区域数据</button>
+        <button class="btn btn-primary relocate">展示所有区域</button>
+        <button class="btn btn-primary create_polygon">创建一个新区域</button>
+      </div>
+    </div>
+    <div class="row">
+      <p class="title">输入数组生成区域</p>
+      <textarea name="" class="make_polygon_area" placeholder="输入经纬度">
+       {"type":"FeatureCollection","features":[{"id":"","type":"Feature","geometry":{"type":"Polygon","coordinates":[[[121.39257737624138,31.239775764059207],[121.392634,31.239763],[121.39333407908035,31.239676018343637],[121.39476620316537,31.239487241145653],[121.39646530040265,31.239148385269417],[121.39673786474786,31.239092489913972],[121.396247,31.233612],[121.396373,31.231892],[121.396191,31.229231],[121.39782993377516,31.219748005865767],[121.397547,31.219651],[121.3978445673493,31.21891766852102],[121.392741,31.218584],[121.388964,31.218763],[121.385381,31.219166],[121.376583,31.220286],[121.376841,31.225387],[121.378386,31.228598],[121.379587,31.231112],[121.381218,31.233442],[121.38551,31.242111],[121.387581,31.240873],[121.38838900427166,31.240701032034075],[121.39026,31.240296],[121.392568,31.239777]]]}}]}
+      </textarea>
+      <button class="btn btn-primary make_polygon_area_confirm" >生成区域</button>
+    </div>
+    <div class="row">
+      <p class="title">信息输出框</p>
+      <textarea name="" class="output_area"></textarea>
+    </div>
+  </div>
+  <script src="bower_components/jquery/dist/jquery.min.js"></script>
+  <script src="bower_components/nmap/build/nmap.dist.js"></script>
+</body>
+<script>
+  'use strict';
+  var loading = $('.loading');
+  var make_polygon_area = $('.make_polygon_area');
+  var make_polygon_area_confirm = $('.make_polygon_area_confirm');
+  var output_all_confirm = $('.output_all_confirm');
+  var output_area = $('.output_area');
+  var relocate = $('.relocate');
+  var open_edit = $('#open_edit');
+  var create_polygon = $('.create_polygon');
+  var map;
+  var color;
+  var polygonList = [];
+  NMap.onLoad(function() {
+    loading.hide();
+    map = NMap.create('Map', document.getElementById('map'), {
+      center: new qq.maps.LatLng(31.259928358250843, 121.44005798879533),
+      zoom: 13
+    });
+    color = NMap.create('Color');
+
+
+    make_polygon_area_confirm.on('click', function() {
+      var data = JSON.parse(make_polygon_area.val());
+      data.features.forEach(function(item) {
+        var _color = color.toHex(color.produceColor(), 0.5);
+        item.geometry.coordinates.forEach(function(_item) {
+          var polygon = NMap.create('Polygon',  {
+            path: (function(path) {
+                    var _path = [];
+                    path.forEach(function(_p) {
+                      _path.push(NMap.create('Point', _p[1], _p[0]).target);
+                    });
+                    return _path;
+                  })(_item),
+            fillColor: _color,
+            strokeColor: _color,
+          });
+          handleNewPolygon(polygon);
+        });
+      });
+      map.fitBounds();
+    });
+
+    open_edit.on('click', function() {
+      var checked = $(this).prop('checked');
+      if (checked) {
+        polygonList.forEach(function(item) {
+          item.enableEdit();
+        });
+      } else {
+        polygonList.forEach(function(item) {
+          item.disableEdit();
+        });
+      }
+    });
+
+    output_all_confirm.on('click', function() {
+      var _p_infos = [];
+      polygonList.forEach(function(item) {
+        _p_infos.push(transLatLngToArray(item.getPoints()));
+      });
+      output_area.val(JSON.stringify(_p_infos));
+    });
+
+    relocate.on('click', function() {
+      map.fitBounds();
+    });
+
+    create_polygon.on('click', function() {
+      var _color = color.toHex(color.produceColor(), 0.5);
+      var polygon = NMap.create('Polygon', {
+        position: map.target.getCenter(),
+        fillColor: _color,
+        strokeColor: _color
+      });
+      handleNewPolygon(polygon);
+    });
+
+    function handleNewPolygon(polygon) {
+      qq.maps.event.addListener(polygon.target, 'click', function () {
+        var _p_info = transLatLngToArray(polygon.getPoints());
+        output_area.val(JSON.stringify(_p_info));
+      });
+      polygonList.push(polygon);
+      map.addChild(polygon);
+    }
+
+  });
+
+  function isArray(object){
+    return object && typeof object==='object' &&
+            Array == object.constructor;
+  }
+
+  function transLatLngToArray(points) {
+    var _p_info = [];
+    points.forEach(function(item) {
+      _p_info.push([item.lng, item.lat]);
+    });
+    return _p_info;
+  }
+
+</script>
+</html>
